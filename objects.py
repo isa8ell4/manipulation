@@ -19,7 +19,7 @@ def contactFrameFromN(contPos, t):
 
     return R
 
-class Finger():
+class Finger_3D():
     """
         id: id of finger
         contPos: 3x1 vector of position contact frame from N
@@ -133,10 +133,10 @@ class Finger():
         # print(pHJ)
         return pHJ
 
-
-
-
-class Manipulator():
+class Manipulator_3D_withoutFriction():
+    """
+    3D cases, meaning twists are 6x1 and the manipulator can move in x,y,z
+    """
     def __init__(self, fingers=None, object=None):
         self.fingers = fingers
         self.object = object
@@ -165,4 +165,116 @@ class Manipulator():
         # G is already tansposed
         HOJ = np.linalg.pinv(G) @ J
         return HOJ
+    
+class Manipulator_3D():
+
+    """
+    built on top of manipulator without friction class
+
+    model: (1) contact points with friction, (2) hard finger, (3) soft finger
+    manipulatorWithoutFriction: original manipulator model
+    """
+    def __init__(self, model, manipulatorWithoutFriction: Manipulator_3D_withoutFriction):
+        self.model = model
+        self.manipulatorWithoutFriction = manipulatorWithoutFriction
+    
+    def H_matrix(self):
+        if self.model == 1:
+            H_iF = np.array([[0,0,0], 
+                            [0,0,0], 
+                            [0,0,1]])
+            H_iM = np.zeros((3,3))
+        if self.model == 2:
+            H_iF = np.identity(3)
+            H_iM = np.zeros((3,3))
+        if self.model == 3:
+            H_iF = np.identity(3)
+            H_iM = np.array([[0,0,0], 
+                            [0,0,0], 
+                            [0,0,1]])
+        H_top = np.concatenate((H_iF, np.zeros((3,3))), axis = 1)  
+        H_bottom = np.concatenate((np.zeros(3,3), H_iM), axis = 1)     
+        return np.concatenate((H_top, H_bottom), axis=0)  
+
+    def findGraspMatrix(self):
+        H = self.H_matrix()
+        G = self.manipulatorWithoutFriction.findGraspMatrix()
+        return H @ G
+
+###### HW3
+
+class Object_2D:
+    """
+    p_on: 2x1 positional vector of object origin frame in reference to N frame
+    """
+    def __init__(self, p_o_n):
+        self.p_o_n = p_o_n
+
+class Finger_2D:
+    """
+    id: id of finger
+    p_ci_n: 2x1 positional vector of contact point in ref to N frame
+    """
+    def __init__(self, id, p_ci_N):
+        self.id = id
+        self.p_ci_N = p_ci_N
+
+    def partialGraspMatrix(self, p_o_n):
+        dist = self.p_ci_N - p_o_n
+        pGM1 = np.array([[1, 0, dist[0][0]]])
+        pGM2 = np.array([[0,1,dist[1][0]]])
+        pGM3 = np.array([[0,0,1]])
+        pGM = np.concatenate((pGM1, pGM2, pGM3), axis=0)
+        return pGM
+    
+class Manipulator_2D_withoutFriction:
+    """
+
+    """
+    def __init__(self, object: Object_2D, fingers: list[Finger_2D]):
+        self.object = object
+        self.fingers = fingers
+    
+    def findGraspMatrix(self):
+        partials = []
+        for f in self.fingers: 
+            pGM = f.partialGraspMatrix(self.object.p_o_n)
+            partials.append(pGM)
+        GM = np.concatenate(partials, axis=0)
+        return GM
+            
+
+class Manipulator_2D:
+    """
+    model: (1) contact points with friction, (2) hard finger, (3) soft finger
+
+    """
+    def __init__(self, model, manipulator: Manipulator_2D_withoutFriction):
+        self.model = model
+        self.manipulator = manipulator
+
+    def H_matrix(self):
+        if self.model == 1:
+            H_iF = np.array([[0,0], 
+                            [0,1]])
+            H_iM = np.zeros((2,2))
+        if self.model == 2:
+            H_iF = np.identity(2)
+            H_iM = np.zeros((2,2))
+        if self.model == 3:
+            H_iF = np.identity(2)
+            H_iM = np.array([[0,0],  
+                            [0,1]])
+        H_top = np.concatenate((H_iF, np.zeros((2,2))), axis = 1)  
+        H_bottom = np.concatenate((np.zeros((2,2)), H_iM), axis = 1)   
+
+        return np.concatenate((H_top, H_bottom), axis=0)  
+
+    def findGraspMatrix(self):
+        H = self.H_matrix()
+        G = self.manipulator.findGraspMatrix()
+        print(np.shape(G))
+        print(np.shape(H))
+        amountOfHs = np.shape(G)
+        return H @ G
 
