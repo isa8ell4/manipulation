@@ -10,9 +10,13 @@ if __name__=="__main__":
     f4 = Finger_2D(id=4, p_ci_N=np.array([[3], [0]]))
     
     m_noFriction = Manipulator_2D_withoutFriction(object=obj, fingers=[f1, f2, f3, f4])
-    m = Manipulator_2D(model=2, manipulator=m_noFriction)
+    m = Manipulator_2D(model=2, manipulator=m_noFriction) # hard finger model
 
     GM_nf = m_noFriction.findGraspMatrix()
     GM = m.findGraspMatrix()
 
     print(f'Grasp Matrix: {np.shape(GM)}\n{GM}')
+
+    print(f'\nGrasp Rank: {m.checkGraspRank()}')
+
+    m.minSingularValue()

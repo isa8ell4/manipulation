@@ -252,29 +252,61 @@ class Manipulator_2D:
     def __init__(self, model, manipulator: Manipulator_2D_withoutFriction):
         self.model = model
         self.manipulator = manipulator
+        self.G = None
 
     def H_matrix(self):
         if self.model == 1:
             H_iF = np.array([[0,0], 
                             [0,1]])
-            H_iM = np.zeros((2,2))
+            H_iM = 0
         if self.model == 2:
             H_iF = np.identity(2)
-            H_iM = np.zeros((2,2))
+            H_iM = 0
         if self.model == 3:
             H_iF = np.identity(2)
-            H_iM = np.array([[0,0],  
-                            [0,1]])
-        H_top = np.concatenate((H_iF, np.zeros((2,2))), axis = 1)  
-        H_bottom = np.concatenate((np.zeros((2,2)), H_iM), axis = 1)   
+            H_iM = 1
+        H_top = np.concatenate((H_iF, np.zeros((2,1))), axis = 1)  
+        H_bottom = np.array([[0, 0, H_iM]]) 
+        # print(f'dim: {np.shape(H_top)} + {np.shape(H_bottom)}')
 
         return np.concatenate((H_top, H_bottom), axis=0)  
 
     def findGraspMatrix(self):
         H = self.H_matrix()
-        G = self.manipulator.findGraspMatrix()
-        print(np.shape(G))
-        print(np.shape(H))
-        amountOfHs = np.shape(G)
-        return H @ G
+        G_part = self.manipulator.findGraspMatrix()
+        # print(f'grasp matrix before H: \n{G}')
+        # print(np.shape(G))
+        # print(np.shape(H))
+        amountOfHs = int(np.shape(G_part)[0]/3)
+        # print(amountOfHs)
+        H_big = np.kron(np.eye(amountOfHs), H)
+        self.G = H_big @ G_part
+        return H_big @ G_part
+    
+    def checkGraspRank(self):
+        rank = np.linalg.matrix_rank(self.G)
+        cols = np.shape(self.G[1])
+        if rank != cols:
+            return False
+        else: return True
 
+    def minSingularValue(self):
+        if self.checkGraspRank() == False:
+            return None
+        M = self.G @ self.G.T
+        eigvals = np.linalg.eigvalsh(M)
+        print()
+        print(eigvals)
+        eigvals = np.clip(eigvals, a_min=0, a_max=None)
+        print()
+        print(eigvals)
+        singulars = np.sqrt(eigvals)
+        print()
+        print(singulars)
+        singulars = np.sort(singulars)[::-1]
+        print()
+
+        print("sqrt(eig of GG^T):", singulars)
+
+        # Do I return zero or the smallest non zero eigen value
+        # seems different from lecture notes
