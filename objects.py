@@ -394,3 +394,18 @@ def plotAgainstPoints(points, yVals, yLabel):
     plt.tight_layout()
 
     plt.show()
+
+
+def maxValues(points, values, amount=5):
+    """return the max 5 values with their positions"""
+    """works for finding best msv and vws"""
+
+    topVals = sorted(enumerate(values), key=lambda x:x[1], reverse=True)[:amount]
+
+    r = []
+    for tv in topVals: 
+        # i = tv[0]
+        point = points[tv[0]]
+        r.append((tv[1], point))
+
+    return r

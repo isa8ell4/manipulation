@@ -50,13 +50,11 @@ if __name__=="__main__":
         # print(f'\nGrasp Rank: {m.checkGraspRank()}')
 
         minSingularVal = m.minSingularValue()
-        if minSingularVal > maxMSV: 
-            maxMSV = minSingularVal
-            pos1 = (x, y)
+ 
 
         VolWrenchSpace = m.volEllipsoidWrenchSpace()
-        if VolWrenchSpace > 0:
-            print(VolWrenchSpace)
+        # if VolWrenchSpace > 0:
+        #     print(VolWrenchSpace)
 
         isotropyIndex = m.graspIsotropyIndex()
 
@@ -70,3 +68,13 @@ if __name__=="__main__":
     plotAgainstPoints(points=points, yVals=vws, yLabel="Volume of Ellipoid")
 
     plotAgainstPoints(points=points, yVals=gii, yLabel="Isotropy Index")
+
+    msvTop5 = maxValues(points, msv)
+    print(f'\ntop 5 minimum singular values: {msvTop5}')
+
+    vwsTop5 = maxValues(points, vws)
+    print(f'\ntop 5 vol wrench spaces: {vwsTop5}')
+
+
+    giiTop5 = maxValues(points, gii)
+    print(f'\ntop 5 isotropy indicies: {giiTop5}')
