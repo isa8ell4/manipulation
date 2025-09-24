@@ -1,6 +1,7 @@
 import numpy as np
 import math
 from scipy.linalg import block_diag
+import matplotlib.pyplot as plt
 
 
 def contactFrameFromN(contPos, t):
@@ -221,10 +222,10 @@ class Finger_2D:
 
     def partialGraspMatrix(self, p_o_n):
         dist = self.p_ci_N - p_o_n
-        pGM1 = np.array([[1, 0, dist[1][0]]])
-        pGM2 = np.array([[0,1,dist[0][0]]])
-        pGM3 = np.array([[0,0,1]])
-        pGM = np.concatenate((pGM1, pGM2, pGM3), axis=0)
+        pGM1 = np.array([[1, dist[1][0]]])
+        pGM2 = np.array([[1,dist[0][0]]])
+        # pGM3 = np.array([[0,0,1]])
+        pGM = np.concatenate((pGM1, pGM2), axis=0)
         return pGM
     
 class Manipulator_2D_withoutFriction:
@@ -374,3 +375,22 @@ def generateRectPoints(xmin, ymin, xmax, ymax, step=0.1):
 
     return points
 
+def plotAgainstPoints(points, yVals, yLabel):
+    labels = [f"({x},{y})" for x,y in points]
+   
+
+    plt.figure(figsize=(6,5))
+    plt.plot(range(len(points)), np.array(yVals), marker='o')    
+
+    plt.xlabel("Position of 5th Vector")
+    plt.ylabel(yLabel)
+    step = 10
+    plt.xticks(
+        range(0, len(points), step),  # positions
+        labels[::step],               # corresponding (x,y) labels
+        rotation=90
+    )    
+
+    plt.tight_layout()
+
+    plt.show()
