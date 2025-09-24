@@ -221,8 +221,8 @@ class Finger_2D:
 
     def partialGraspMatrix(self, p_o_n):
         dist = self.p_ci_N - p_o_n
-        pGM1 = np.array([[1, 0, dist[0][0]]])
-        pGM2 = np.array([[0,1,dist[1][0]]])
+        pGM1 = np.array([[1, 0, dist[1][0]]])
+        pGM2 = np.array([[0,1,dist[0][0]]])
         pGM3 = np.array([[0,0,1]])
         pGM = np.concatenate((pGM1, pGM2, pGM3), axis=0)
         return pGM
@@ -273,6 +273,7 @@ class Manipulator_2D:
 
     def findGraspMatrix(self):
         H = self.H_matrix()
+        
         G_part = self.manipulator.findGraspMatrix()
         # print(f'grasp matrix before H: \n{G}')
         # print(np.shape(G))
@@ -280,6 +281,7 @@ class Manipulator_2D:
         amountOfHs = int(np.shape(G_part)[0]/3)
         # print(amountOfHs)
         H_big = np.kron(np.eye(amountOfHs), H)
+        # print(f'\nH:{np.shape(H_big)} \n{H_big}')
         self.G = H_big @ G_part
         return H_big @ G_part
     
@@ -307,9 +309,7 @@ class Manipulator_2D:
         # print(singulars)
         singulars = np.sort(singulars)[::-1]
         # print()
-
         # print("sqrt(eig of GG^T):", singulars)
-
         # min = np.matrix.min(singulars)
      
         vMin = math.inf
@@ -322,8 +322,55 @@ class Manipulator_2D:
 
     def volEllipsoidWrenchSpace(self):
         q = np.sqrt(np.linalg.det(self.G @ self.G.T))
-        print(self.G @ self.G.T)
-        print(np.linalg.det(self.G @ self.G.T))
-        print(f'q: {q}')
-
+        # print(self.G @ self.G.T)
+        # print(np.linalg.det(self.G @ self.G.T))
+   
         return q
+    
+    def graspIsotropyIndex(self): 
+        M = self.G @ self.G.T
+        eigvals = np.linalg.eigvalsh(M)
+
+        eigvals = np.clip(eigvals, a_min=0, a_max=None)
+
+        singulars = np.sqrt(eigvals)
+
+        singulars = np.sort(singulars)[::-1]
+     
+        vMin = math.inf
+        vMax = 0.0
+        for v in list(singulars):
+            if v < vMin and v != 0.0:
+                vMin = v
+            if v > vMax and v !=0.0:
+                vMax = v
+
+        return vMin/vMax
+    
+
+def generateRectPoints(xmin, ymin, xmax, ymax, step=0.1):
+
+    points = []
+
+    y=ymin
+    while y <= ymax:
+        points.append((xmin, round(y,2)))
+        y += step
+
+    x = xmin + step
+    while x <= xmax:
+        points.append((round(x,2), ymax))
+        x += step
+
+    y = ymax - step
+    while y >= ymin:
+        points.append((xmax, round(y,2)))
+        y -= step
+
+    x = xmax - step
+    while x > xmin:
+        points.append((round(x,2), ymin))
+        x -= step
+
+    return points
+
