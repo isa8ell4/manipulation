@@ -19,4 +19,7 @@ if __name__=="__main__":
 
     print(f'\nGrasp Rank: {m.checkGraspRank()}')
 
-    m.minSingularValue()
+    minSingularVal = m.minSingularValue()
+    print(f'Minimum Singular Value: {minSingularVal}')
+
+    VolWrenchSpace = m.volEllipsoidWrenchSpace()

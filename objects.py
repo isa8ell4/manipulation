@@ -291,22 +291,39 @@ class Manipulator_2D:
         else: return True
 
     def minSingularValue(self):
+        
         if self.checkGraspRank() == False:
             return None
+        
         M = self.G @ self.G.T
         eigvals = np.linalg.eigvalsh(M)
-        print()
-        print(eigvals)
+        # print()
+        # print(eigvals)
         eigvals = np.clip(eigvals, a_min=0, a_max=None)
-        print()
-        print(eigvals)
+        # print()
+        # print(eigvals)
         singulars = np.sqrt(eigvals)
-        print()
-        print(singulars)
+        # print()
+        # print(singulars)
         singulars = np.sort(singulars)[::-1]
-        print()
+        # print()
 
-        print("sqrt(eig of GG^T):", singulars)
+        # print("sqrt(eig of GG^T):", singulars)
 
-        # Do I return zero or the smallest non zero eigen value
-        # seems different from lecture notes
+        # min = np.matrix.min(singulars)
+     
+        vMin = math.inf
+        # min = [v for v in list(singulars) if v<vMin and v !=0]
+        for v in list(singulars):
+            if v < vMin and v != 0:
+                vMin = v
+
+        return vMin
+
+    def volEllipsoidWrenchSpace(self):
+        q = np.sqrt(np.linalg.det(self.G @ self.G.T))
+        print(self.G @ self.G.T)
+        print(np.linalg.det(self.G @ self.G.T))
+        print(f'q: {q}')
+
+        return q
